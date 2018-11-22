@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JW Monster Slayer</title>
+    <script src="https://npmcdn.com/vue/dist/vue.js"></script>
+    <link rel="stylesheet" href="css/foundation.min.css">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app">
+    <section class="row">
+        <div class="small-6 columns">
+            <h1 class="text-center">YOU</h1>
+            <div class="healthbar">
+                <div class="healthbar text-center" style="background-color: green; margin: 0; color: white;" :style="{width:(playerScore) + '%'}">
+
+                </div>
+            </div>
+        </div>
+        <div class="small-6 columns">
+            <h1 class="text-center">MONSTER</h1>
+            <div class="healthbar">
+                <div class="healthbar text-center" style="background-color: green; margin: 0; color: white;" :style="{width:(monsterScore) + '%'}">
+
+                </div>
+            </div>
+        </div>
+    </section>
+    <section 
+        class="row controls" 
+        v-if='!gameProgress'>
+        <div class="small-12 columns">
+            <button id="start-game" @click="gameStart">START NEW GAME</button>
+        </div>
+    </section>
+    <section class="row controls" v-if="gameProgress">
+        <div class="small-12 columns">
+            <button id="attack" 
+                @click="attack()"
+                :disabled="monsterScore <= 0 || !gameProgress" 
+                >
+                ATTACK
+            </button>
+            <button id="special-attack" 
+                @click="attack('special')"
+                    :disabled="monsterScore <= 0 || !gameProgress" 
+                >SPECIAL ATTACK</button>
+
+            <button id="heal" 
+                @click="heal"
+                :disabled="monsterScore <= 0 || !gameProgress" 
+                >
+                HEAL
+            </button>
+            <button id="give-up" 
+                @click="gameReset"
+                v-if='gameProgress'>
+                GIVE UP
+            </button>
+            
+            <button id="start-game" 
+                @click="gameStart"
+                v-if="winner" 
+                >
+                START NEW GAME
+            </button>
+        </div>
+    </section>
+    <section class="row log" v-if="gameProgress">
+        <div class="small-12 columns">
+            <ul>
+                <li>
+                    You score: {{playerScore}}
+                </li>
+                <li>
+                    Monster score: {{monsterScore}}
+                </li>
+                <li v-for='round in rounds'>
+                    <span v-if="round > 0">You attacked the monster with {{round}}</span>
+                    <span v-if="round < 0">You healed with {{round - round * 2}}</span>
+                </li>
+                <li v-if="winner">
+                    <span style='font-size:20px'>YOU WON!</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+</div>
+</body>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                energyRecovered: 0,
+                playerScore: 100,
+                monsterScore: 100,
+                rounds: [],
+                gameProgress: false,
+            },
+            methods: {
+                gameStart: function() {
+                    this.gameProgress = true;
+                    this.rounds = []
+                    this.playerScore = 100;
+                    this.monsterScore = 100;
+                    this.winner = false
+                },
+
+                gameReset: function() {
+                    this.winner = false;
+                    this.gameProgress = false;
+                },
+
+                newGame: function() {
+                    this.playerScore = 0;
+                    this.monsterScore = 0;
+                    this.winner = false;
+                },
+
+                wonGame: function() {
+                    this.winner = true;    
+                    this.monsterScore = 0;
+                    this.playerScore = 0; 
+                },
+
+                attack: function(special) {
+                    if (typeof special === 'undefined') {
+                        min = 15;
+                        max = 15;
+                    } else {
+                        min = 30;
+                        max = 30;
+                    }
+
+                    energySpent = this.generateRandom(min,max);
+                    
+                    this.playerScore -= energySpent;
+                    this.monsterScore -= energySpent;
+                    
+                    // if monsterScore is less than zero,set winner flag
+                    if (this.monsterScore <= 0) {
+                        this.wonGame();
+                    }
+                    this.rounds.push(energySpent);
+                },
+
+
+                generateRandom: function(min, max) {
+                    return Math.ceil(
+                            Math.random() * (max - min) + min
+                    );
+                },
+
+                heal: function() {
+
+                    max = 20;
+                    min = 20;
+
+                    this.energyRecovered = this.generateRandom(min,max);
+                    this.playerScore += this.energyRecovered;
+                    this.rounds.push(this.energyRecovered - (this.energyRecovered * 2));
+                }
+
+            },
+        });
+
+    </script>
+</html>
